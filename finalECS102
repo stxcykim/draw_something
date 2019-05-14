@@ -1,0 +1,178 @@
+__author__ = "Stacy Kim"
+
+#importing random for when they choose a random player to be the first player
+#importing PIL and tkinter for GUI, allowing user to draw and exit 
+#importing getpass to hide the user input 
+#importing sys so the game can terminate 
+import random 
+from PIL import ImageTk, Image, ImageDraw 
+import PIL
+from tkinter import *
+import getpass
+import sys
+
+#creating a game account class to act as a username and password for the user
+#can access game by either putting in my password (1234) or creating an account
+#the game does not work if the correct password is not put in 
+#if the right password is put in, then it will greet the user to the game
+#you can change the password and username in the code or even add accounts
+class GameAccount:
+	def __init__(self,password="1234",username="stxcykim"):
+		self.__password=password
+		self.__username= username
+	def get_info(self,password="1234"):
+		if password == self.__password:
+			return self.__username + " welcome to the Drawing Game!\n"
+		else:
+			sys.exit("*** WRONG PASSWORD ***")
+	def set_info(self,newname,newpass):
+		self.__username = newname
+		self.__newpass = newpass 
+
+my_account = GameAccount()
+new_account = GameAccount()
+
+accounts = {}
+
+#asks user if they are a new user or not 
+#if not new user, you enter password and continue with the game
+#if new user, you enter a new username and password 
+#error occurs and ends game if y or n is not the input
+user = input("Are you a new user?(y/n):")
+if user == "y" or user =="Y":
+	newname = input("Please enter a username:")
+	newpass = getpass.unix_getpass("Please enter a password:")
+	new_account.set_info(newname,newpass)
+	word = getpass.unix_getpass("Reenter your password:")
+	accounts.update({newname:newpass})
+	sorted(accounts.values())
+	if word == newpass:
+		print(new_account.get_info().upper())
+	else:
+		sys.exit("*** WRONG PASSWORD ***")
+elif user == "n" or user == "N":
+	password = input("Please enter your password:")
+	print(my_account.get_info().upper())
+else:
+	sys.exit("*** ERROR:ANSWER IF YOU ARE A NEW USER OR NOT WITH Y/N ***")
+
+#setting the dimensions of the GUI box 
+width = 500
+height = 500
+center = height // 2
+white = (255, 255, 255)
+green = (0,128,0)
+
+#function that makes the  drawing box pop up everytime it is the next player's turn to draw
+#called later in the code  
+def picture():
+
+#function that allows user the draw with the mouse 
+	def paint(event):
+		x1,y1 = (event.x -1), (event.y -1)
+		x2,y2 = (event.x +1), (event.y +1)
+		cv.create_oval(x1,y1,x2,y2, fill = "black", width=5)
+		draw.line([x1,y1,x2,y2],fill="black", width=5)
+	root = Tk()
+	cv = Canvas(root, width=width, height=height, bg='white')
+	cv.pack()
+	image1= PIL.Image.new("RGB", (width, height),white)
+	draw = ImageDraw.Draw(image1)
+	cv.pack(expand = YES, fill = BOTH)
+	cv.bind("<B1-Motion>",paint)
+	root.mainloop()
+
+#creating and opening a text file named insturction.txt with the instructions written in it
+#making sure to close the file after everything
+file = open("instruction.txt","w")
+file.write("")
+file.write("~~RULES ON HOW TO PLAY THE DRAWING GAME ~~\n" )
+file.write("1. Enter first player's name then enter second player's name\n")
+file.write("2. Player starting the game enters ONE word to describe the image and draws an image\n")
+file.write("3. Opponent will see the image, exit out of the drawing and guess what it is\n")
+file.write("4. Rules 2 and 3 repeats with the next player\n")
+file.write("5. Every correct guess equals one point gained\n")
+file.write("6. First player to reach 3 points is the winner of the game\n")
+file.write("Now let's get started...\n")
+file.close()
+
+#input asking if instructions are needed 
+#depending on if user needs insutrctions or not, the program will read from the file with the instructions, continue or exit the program
+rules = input("Would you like instructions on how to play? (y/n):")
+if rules == "y" or rules == "Y":
+	file = open("instruction.txt","r")
+	instructions = file.read()
+	print(instructions)	
+elif rules == "n" or rules == "N":
+	print ("Then let's get started.")
+else:
+	sys.exit("ERROR: Please restart the game to play.")
+
+#taking in two player's name 
+#stored player's names in a list called players
+#will choose a random player from the list to be the first player
+#first player is removed from the player list
+#setting second player to the only other player in the list which is denoted as players[0]
+#shows users who is the first player
+player_1 = input("\nPlease enter player one's name:")
+player_2 = input("Please enter player two's name:")
+players = [player_1, player_2]
+first_player = random.choice(players)
+p1 = first_player
+players.remove(first_player)
+p2 = players[0]
+print ("\nThe first player to go is..." + p1 + "\n")
+
+#setting variables outside of the loop 
+p1_points = 0
+p2_points = 0
+p1_drawing = "star"
+p2_drawing = "pig"
+p1_answer = "star"
+p2_answer = "pig"
+
+#creating an empty list called words
+words = []
+
+#while loops that runs until one of the players achieves 3 points
+#everytime the user is asked to input what they will draw, the input is hidden
+#whenever the answer and drawing matches, that player will get one point 
+#drawings guessed correctly will be appended to the words list 
+while p1_points!=3 and p2_points !=3: 
+	p1_drawing= getpass.unix_getpass("(" + p1 + ")" + "Please enter what you will draw:")
+	picture()
+	p2_answer = input("(" + p2 + ")" + "Guess what your opponent drew:")
+	if p2_answer == p1_drawing:
+		words.append(p2_answer)
+		p2_points += 1
+		print("\nYou (" + p2 + ") currently have " + str(p2_points) + " point(s).")
+		print ("\nOkay...Next player's turn\n")
+	else:
+		print("\nYou (" + p2 + ") currently have " + str(p2_points) + " point(s).")
+		print ("\nOkay...Next player's turn\n")
+	p2_drawing = getpass.unix_getpass("(" + p2 + ")" + "Please enter what you will draw:")
+	picture()
+	p1_answer = input("(" + p1 + ")" + "Guess what your opponent drew:")
+	if p1_answer == p2_drawing:
+		words.append(p1_answer)
+		p1_points += 1
+		print("\nYou (" + p1 + ") currently have " + str(p1_points) + " point(s).")
+		print ("\nOkay...Next player's turn\n")
+	else:
+		print("\nYou (" + p2 + ") currently have " + str(p1_points) + " point(s).")
+		print ("\nOkay...Next player's turn\n")
+
+#printing out the results of points at the end of the game 
+print (p1 + " won " + str(p1_points) + " points!")
+print (p2 + " won " + str(p2_points) + " points!\n")
+
+#printing out all the attempted words in a sorted list
+print("These are all the words you attempted correctly:")
+words.sort()
+print(words)
+
+#whichever player achieved 3 points will be congratulated and declared the winner 
+if p1_points == 3:
+	print ("\nCONGRATULATIONS! " + p1 + " is the winner!")
+elif p2_points == 3:
+	print ("\nCONGRATULATIONS! " + p2 + " is the winner!")
